@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090b09">
-  <meta name="description" content="30日間のHIITを記録する、サイバー猫のチャレンジボード。">
-  <title>FERAL // 30D HIIT CHALLENGE</title>
+  <meta name="description" content="毎日のHIITを月カレンダーで記録する、サイバー猫のチャレンジボード。">
+  <title>FERAL // HIIT CHALLENGE</title>
   <link rel="icon" type="image/svg+xml" href="cat-stamp.svg">
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
@@ -22,16 +22,16 @@
   <main class="board">
     <header class="hero">
       <div class="topline"><a class="wordmark" href="#">F<span>Ξ</span>RAL<span class="mark">//</span></a><span class="online"><i></i> SYSTEM ONLINE</span></div>
-      <div class="hero-copy"><p class="eyebrow">PERSONAL TRAINING PROTOCOL / VOL. 01</p><h1>30D HIIT<br><span>CHALLENGE<span class="cursor">_</span></span></h1><p class="tagline">野性を、起動しろ。<span>WAKE YOUR INNER BEAST.</span></p></div>
+      <div class="hero-copy"><p class="eyebrow">PERSONAL TRAINING PROTOCOL / VOL. 01</p><h1>DAILY HIIT<br><span>CHALLENGE<span class="cursor">_</span></span></h1><p class="tagline">野性を、起動しろ。<span>WAKE YOUR INNER BEAST.</span></p></div>
       <div class="watcher" aria-hidden="true">
         <img src="cat-watcher.svg" width="400" height="340" alt="" decoding="async">
         <span class="watcher-caption">SUBJECT_001 / ALWAYS WATCHING</span>
       </div>
-      <div class="hero-bottom"><span>DISCIPLINE IS A CHEAT CODE.</span><span>01 — 30 <b>↗</b></span></div>
+      <div class="hero-bottom"><span>DISCIPLINE IS A CHEAT CODE.</span><span>EVERY DAY <b>↗</b></span></div>
     </header>
 
     <section class="status-section" aria-labelledby="status-title">
-      <div class="section-heading"><h2 id="status-title"><span>01 /</span> SYSTEM STATUS</h2><span id="day-label">DAY 01 / 30</span></div>
+      <div class="section-heading"><h2 id="status-title"><span>01 /</span> SYSTEM STATUS</h2><span id="day-label"></span></div>
       <div class="date-row"><span>TODAY</span><time id="today"></time></div>
       <div class="stats"><div class="stat"><span>連続記録 <small>STREAK</small></span><p><strong id="streak">0</strong><span>DAYS</span></p></div><div class="stat"><span>朝夜フル達成 <small>FULL STREAK</small></span><p><strong id="full-streak">0</strong><span>DAYS</span></p></div></div>
       <div class="reward" id="reward"><div class="reward-top"><h3><span>ϟ</span> ENERGY REWARD</h3><span class="reward-badge" id="reward-badge">LOCKED</span></div><p id="reward-message">あと3日で報酬解放</p><div class="reward-gauge" role="progressbar" aria-label="次の報酬への朝夜フル達成日数" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" id="reward-gauge"><i></i><i></i><i></i></div><div class="reward-meta"><span>朝・夜を3日連続で達成</span><span>累計獲得 <b id="reward-count">0</b> 回</span></div><p class="reward-rule">3日ごとに、MONSTER ENERGYを買う権利 GET。</p></div>
@@ -41,8 +41,8 @@
 
     <section class="menu-section" aria-labelledby="menu-title"><div class="section-heading"><h2 id="menu-title"><span>03 /</span> TRAINING PROTOCOL</h2><span>8 MISSIONS</span></div><ol class="menu"><li><span>HIIT <small>タバタ式</small></span><b>20s / 10s</b></li><li><span>アブローラー</span><b>10回以上</b></li><li><span>腕立て</span><b>年齢分</b></li><li><span>バランスボール</span><b>CORE</b></li><li><span>股関節ストレッチ</span><b>STRETCH</b></li><li><span>モビリティ</span><b>MOBILITY</b></li><li><span>逆立ち練習</span><b>BALANCE</b></li><li><span>リフティング</span><b>CONTROL</b></li></ol></section>
 
-    <section class="calendar-section" aria-labelledby="calendar-title"><div class="section-heading"><h2 id="calendar-title"><span>04 /</span> THE 30-DAY GRID</h2><span id="completed-count">00 / 30 CLEAR</span></div><p class="calendar-range" id="calendar-range"></p><div id="calendar" class="calendar" role="list" aria-label="30日間の達成記録"></div><div class="legend"><span><i class="legend-done"></i>達成</span><span><i class="legend-full"></i>朝夜フル</span><span><i class="legend-today"></i>今日</span></div><p class="calendar-note">朝か夜、どちらか1回でその日は達成。両方でフル達成。</p></section>
-    <footer><svg aria-hidden="true" viewBox="0 0 80 64"><use href="#cat-stamp"/></svg><p>NO EXCUSES.<br><span>JUST PROGRESS.</span></p><div><span>FERAL / PERSONAL USE ONLY</span><span>30日後、違う自分になる。</span></div></footer>
+    <section class="calendar-section" aria-labelledby="calendar-title"><div class="section-heading"><h2 id="calendar-title"><span>04 /</span> MONTHLY GRID</h2><span id="completed-count">00 / 31 CLEAR</span></div><div class="month-nav"><button type="button" id="prev-month" aria-label="前の月">‹ PREV</button><p id="month-label" aria-live="polite"></p><button type="button" id="next-month" aria-label="次の月">NEXT ›</button></div><button type="button" id="this-month" class="this-month" hidden>今月に戻る</button><div class="weekdays" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div><div id="calendar" class="calendar" role="list" aria-label="月間の達成記録"></div><div class="legend"><span><i class="legend-done"></i>達成</span><span><i class="legend-full"></i>朝夜フル</span><span><i class="legend-today"></i>今日</span></div><p class="calendar-note">朝か夜、どちらか1回でその日は達成。両方でフル達成。</p></section>
+    <footer><svg aria-hidden="true" viewBox="0 0 80 64"><use href="#cat-stamp"/></svg><p>NO EXCUSES.<br><span>JUST PROGRESS.</span></p><div><span>FERAL / PERSONAL USE ONLY</span><span>毎日、違う自分になる。</span></div></footer>
   </main>
 </body>
 </html>

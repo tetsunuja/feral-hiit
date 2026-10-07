@@ -26,17 +26,20 @@
     }
   }
   let state = readState();
+  let viewMonth = today.slice(0, 7);
+  const monthDates = month => { const [y, m] = month.split('-').map(Number); const days = new Date(y, m, 0).getDate(); return Array.from({ length: days }, (_, i) => `${month}-${String(i + 1).padStart(2, '0')}`); };
+  const shiftMonth = (month, n) => { const [y, m] = month.split('-').map(Number); const d = new Date(y, m - 1 + n, 1, 12); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
   const $ = id => document.getElementById(id);
   const achieved = (key, full = false) => { const record = state.records[key]; return Boolean(record && (full ? record.morning && record.evening : record.morning || record.evening)); };
   function streak(full = false) {
     let key = achieved(today, full) ? today : shiftDate(today, -1);
     let count = 0;
-    while (key >= state.startDate && achieved(key, full)) { count++; key = shiftDate(key, -1); }
+    while (achieved(key, full)) { count++; key = shiftDate(key, -1); }
     return count;
   }
   function rewardCount() {
     let previous = null, run = 0, total = 0;
-    const keys = Object.keys(state.records).filter(key => key >= state.startDate && key <= today && achieved(key, true)).sort();
+    const keys = Object.keys(state.records).filter(key => key <= today && achieved(key, true)).sort();
     for (const key of keys) {
       run = previous && shiftDate(previous, 1) === key ? run + 1 : 1;
       if (run % 3 === 0) total++;
@@ -53,9 +56,8 @@
   function render() {
     $('today').textContent = prettyDate(today);
     $('today').dateTime = today;
-    const dates = Array.from({ length: 30 }, (_, index) => shiftDate(state.startDate, index));
-    const dayIndex = dates.indexOf(today);
-    $('day-label').textContent = dayIndex >= 0 ? `DAY ${String(dayIndex + 1).padStart(2, '0')} / 30` : today > dates[29] ? '30日期間終了 / 記録継続中' : '開始日前';
+    const [ty, tm, td] = today.split('-');
+    $('day-label').textContent = `${ty}.${tm} / DAY ${td}`;
     $('streak').textContent = streak();
     const fullStreak = streak(true), rewards = rewardCount();
     const progress = fullStreak > 0 && fullStreak % 3 === 0 ? 3 : fullStreak % 3;
@@ -72,17 +74,22 @@
       $(period).querySelector('.check').textContent = active ? '✓' : '＋';
       $(period).querySelector('.button-state').textContent = active ? '記録済み / COMPLETE' : '未記録 / STANDBY';
     }
-    $('calendar-range').textContent = `${prettyDate(dates[0])} → ${prettyDate(dates[29])} / 初回起動日から30日間`;
-    $('completed-count').textContent = `${String(dates.filter(key => achieved(key)).length).padStart(2, '0')} / 30 CLEAR`;
-    $('calendar').replaceChildren(...dates.map((key, index) => {
+    const dates = monthDates(viewMonth);
+    const [vy, vm] = viewMonth.split('-').map(Number);
+    $('month-label').textContent = `${vy}年${vm}月`;
+    $('this-month').hidden = viewMonth === today.slice(0, 7);
+    $('next-month').disabled = viewMonth >= today.slice(0, 7);
+    $('completed-count').textContent = `${String(dates.filter(key => achieved(key)).length).padStart(2, '0')} / ${dates.length} CLEAR`;
+    const blanks = Array.from({ length: parseDate(dates[0]).getDay() }, () => { const cell = document.createElement('div'); cell.className = 'day blank'; cell.setAttribute('aria-hidden', 'true'); return cell; });
+    $('calendar').replaceChildren(...blanks, ...dates.map((key, index) => {
       const done = achieved(key), full = achieved(key, true);
       const cell = document.createElement('div');
-      cell.className = `day${done ? ' done' : ''}${full ? ' full' : ''}${key === today ? ' today' : ''}`;
+      cell.className = `day${done ? ' done' : ''}${full ? ' full' : ''}${key === today ? ' today' : ''}${key > today ? ' future' : ''}`;
       cell.setAttribute('role', 'listitem');
-      cell.setAttribute('aria-label', `${index + 1}日目、${prettyDate(key)}、${full ? '朝夜フル達成' : done ? '達成' : '未達成'}${key === today ? '、今日' : ''}`);
+      cell.setAttribute('aria-label', `${prettyDate(key)}、${full ? '朝夜フル達成' : done ? '達成' : '未達成'}${key === today ? '、今日' : ''}`);
       cell.title = cell.getAttribute('aria-label');
       if (key === today) cell.setAttribute('aria-current', 'date');
-      cell.innerHTML = `<span class="day-number">${String(index + 1).padStart(2, '0')}</span>${done ? '<svg viewBox="0 0 80 64" aria-hidden="true"><use href="#cat-stamp"/></svg>' : ''}`;
+      cell.innerHTML = `<span class="day-number">${index + 1}</span>${done ? '<svg viewBox="0 0 80 64" aria-hidden="true"><use href="#cat-stamp"/></svg>' : ''}`;
       return cell;
     }));
     $('save-status').classList.toggle('error', !storageAvailable);
@@ -90,7 +97,7 @@
   }
   function refreshDate() {
     const current = dateKey(new Date());
-    if (current !== today) { today = current; render(); if (storageAvailable) $('save-status').textContent = '日付が変わりました。今日の記録をどうぞ。'; }
+    if (current !== today) { if (viewMonth === today.slice(0, 7)) viewMonth = current.slice(0, 7); today = current; render(); if (storageAvailable) $('save-status').textContent = '日付が変わりました。今日の記録をどうぞ。'; }
   }
   for (const period of ['morning', 'evening']) {
     $(period).addEventListener('click', () => {
@@ -103,6 +110,9 @@
       if (saved) $('save-status').textContent = `${period === 'morning' ? '朝' : '夜'}の記録を${record[period] ? '保存' : '解除'}しました。`;
     });
   }
+  $('prev-month').addEventListener('click', () => { viewMonth = shiftMonth(viewMonth, -1); render(); });
+  $('next-month').addEventListener('click', () => { if (viewMonth < today.slice(0, 7)) viewMonth = shiftMonth(viewMonth, 1); render(); });
+  $('this-month').addEventListener('click', () => { viewMonth = today.slice(0, 7); render(); });
   window.addEventListener('storage', event => {
     if (event.key === STORAGE_KEY || event.key === null) {
       storageAvailable = true; storageMessage = ''; state = readState();
