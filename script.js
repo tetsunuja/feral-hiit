@@ -16,7 +16,7 @@
       if (!saved || !validDate(saved.startDate) || !saved.records || typeof saved.records !== 'object' || Array.isArray(saved.records)) throw new Error('Invalid saved data');
       const records = {};
       for (const [key, value] of Object.entries(saved.records)) {
-        if (validDate(key) && value && typeof value === 'object') records[key] = { morning: value.morning === true, evening: value.evening === true };
+        if (validDate(key) && value && typeof value === 'object') records[key] = { morning: value.morning === true, evening: value.evening === true, t: Number(value.t) || 0 };
       }
       return { startDate: saved.startDate, records };
     } catch (error) {
@@ -104,10 +104,12 @@
       refreshDate();
       const record = state.records[today] || { morning: false, evening: false };
       record[period] = !record[period];
+      record.t = Date.now();
       state.records[today] = record;
       const saved = save();
       render();
       if (saved) $('save-status').textContent = `${period === 'morning' ? '朝' : '夜'}の記録を${record[period] ? '保存' : '解除'}しました。`;
+      sync();
     });
   }
   $('prev-month').addEventListener('click', () => { viewMonth = shiftMonth(viewMonth, -1); render(); });
@@ -120,9 +122,66 @@
       if (storageAvailable) $('save-status').textContent = '別のタブの記録を反映しました。';
     }
   });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDate(); });
+  const SYNC_URL = 'https://api.github.com/repos/tetsunuja/feral-hiit-data/contents/records.json';
+  const TOKEN_KEY = 'feral-hiit-token';
+  const readToken = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (error) { return ''; } };
+  const setSync = (text, error = false) => { $('sync-status').textContent = text; $('sync-status').classList.toggle('error', error); };
+  function mergeRemote(remote) {
+    let pulled = false, localNewer = false;
+    for (const [key, value] of Object.entries(remote)) {
+      if (!validDate(key) || !value || typeof value !== 'object') continue;
+      const local = state.records[key];
+      if (!local || (Number(value.t) || 0) > (local.t || 0)) { state.records[key] = { morning: value.morning === true, evening: value.evening === true, t: Number(value.t) || 0 }; pulled = true; }
+    }
+    for (const [key, local] of Object.entries(state.records)) {
+      const value = remote[key];
+      if (!value || (local.t || 0) > (Number(value.t) || 0)) localNewer = true;
+    }
+    return { pulled, localNewer };
+  }
+  async function github(method, body) {
+    const response = await fetch(method === 'GET' ? `${SYNC_URL}?_=${Date.now()}` : SYNC_URL, { method, cache: 'no-store', headers: { Authorization: `Bearer ${readToken()}`, Accept: 'application/vnd.github+json' }, body: body && JSON.stringify(body) });
+    if (!response.ok) throw Object.assign(new Error(`GitHub ${response.status}`), { status: response.status });
+    return response.json();
+  }
+  let syncing = false, syncAgain = false;
+  async function sync() {
+    if (typeof fetch !== 'function') return;
+    if (!readToken()) { setSync('クラウド同期：未設定（この端末だけに保存中）'); return; }
+    if (syncing) { syncAgain = true; return; }
+    syncing = true; setSync('クラウド同期中…');
+    try {
+      for (let attempt = 0; ; attempt++) {
+        const file = await github('GET');
+        const remote = JSON.parse(atob(file.content.replace(/\s/g, ''))).records || {};
+        const { pulled, localNewer } = mergeRemote(remote);
+        if (pulled) { save(); render(); }
+        if (!localNewer) break;
+        try {
+          await github('PUT', { message: `records ${today}`, sha: file.sha, content: btoa(JSON.stringify({ records: state.records }, null, 1)) });
+          break;
+        } catch (error) { if (attempt >= 2 || ![409, 422].includes(error.status)) throw error; }
+      }
+      setSync(`クラウド同期済み ${new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`);
+    } catch (error) {
+      setSync(error.status === 401 ? '同期エラー：キーが無効か期限切れです。キーを入れ直してください。' : error.status === 403 || error.status === 404 ? '同期エラー：キーに記録用リポジトリ（feral-hiit-data）の読み書き権限がありません。' : '同期できませんでした（オフライン？）。記録は端末に保存済みで、次に開いた時に同期します。', true);
+    } finally {
+      syncing = false;
+      if (syncAgain) { syncAgain = false; sync(); }
+    }
+  }
+  $('token-save').addEventListener('click', () => {
+    const token = $('token-input').value.trim();
+    if (!token) return;
+    try { localStorage.setItem(TOKEN_KEY, token); } catch (error) { setSync('この端末ではキーを保存できません。', true); return; }
+    $('token-input').value = '';
+    sync();
+  });
+  $('token-clear').addEventListener('click', () => { try { localStorage.removeItem(TOKEN_KEY); } catch (error) {} sync(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { refreshDate(); sync(); } });
   window.addEventListener('focus', refreshDate);
   setInterval(refreshDate, 30000);
   save();
   render();
+  sync();
 })();

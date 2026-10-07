@@ -47,3 +47,14 @@ localStorageのキーは `feral-hiit-v1`、内容は `{ startDate: 'YYYY-MM-DD',
 - JSON形式のバックアップ／復元
 - 次の30日チャレンジの開始と過去チャレンジの閲覧
 - PWA化してホーム画面への追加とオフライン利用
+
+## クラウド同期（どの端末でも同じ記録）
+
+記録は非公開リポジトリ `tetsunuja/feral-hiit-data` の `records.json` に保存されます。サイト本体は公開、記録は非公開です。
+
+1. https://github.com/settings/personal-access-tokens/new でキーを作る
+   - Repository access: Only select repositories → `feral-hiit-data` だけ
+   - Permissions → Repository permissions → Contents: Read and write
+2. サイト下部「05 / CLOUD SYNC」→「同期キーの設定」に貼って保存（端末ごとに1回）
+
+同じ日をスマホとPCで別々に押した場合は、後から押した方が残ります。オフライン中の記録は端末に保存され、次に開いた時に同期されます。

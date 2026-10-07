@@ -28,3 +28,15 @@ h3{font-size:14px}.date-row time{font-size:16px}.watcher img{height:auto}
 .day.blank{visibility:hidden}
 .day.future{opacity:.35}
 @media(max-width:600px){.weekdays{gap:5px}.day-number{left:4px;top:2px;font-size:11px}.day svg{width:58%;margin-top:8px}.day:not(.done):after{font-size:16px}}
+
+/* Cloud sync */
+.sync-status{border:1px solid var(--line);background:var(--panel);padding:14px 16px;margin:0;font-size:13px;color:var(--green)}
+.sync-status.error{color:#ffc18f;border-color:#6b4a2b}
+.sync-setup{margin-top:10px;font-size:13px;color:var(--muted)}
+.sync-setup summary{cursor:pointer;padding:10px 0;color:var(--text)}
+.sync-setup p{line-height:1.7;margin:4px 0 12px}
+.token-row{display:flex;gap:8px}
+.token-row input{flex:1;min-width:0;font:inherit;font-size:16px;background:#050605;color:var(--text);border:1px solid #46503b;padding:10px}
+.token-row input:focus{outline:2px solid var(--green)}
+.small-button{min-height:44px;padding:8px 16px;text-align:center;font-size:13px}
+.small-button.ghost{margin-top:10px;border-color:var(--line);color:var(--muted);background:transparent}
